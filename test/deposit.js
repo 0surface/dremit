@@ -104,43 +104,49 @@ beforeEach('Deploy fresh contract, get signers', async() => {
            .connect(sender)
            .deposit(_randomRemitKey, _depositLockDuration, {value: _sent, gasPrice: gas})
        )
-       .to.be.revertedWith("Invalid, remit Key has an active deposit")
+       .to.be.revertedWith("Remittance::deposit:Invalid, remit Key has an active deposit")
     });    
 });
 
 
-describe('Deposit with active/passowrd reuse denial test (in steps)', () => {
+describe('Deposit with active/password reuse denial test (in steps)', () => {
     const receiverPassword = "abcdef";
     let _key_1 = "";
 
-    it('should deploy contract first', async() => {
+    it('should deploy contract, generate Key, deposit first time', async() => {
+        //Deploy
         Remit = await ethers.getContractFactory("Remittance");
         [deployer, sender, remitter, ...accounts] = await ethers.getSigners();
         remittance = await Remit.deploy();
         await remittance.deployed();
-    });
-    
-    it('should generate key', async() => {
-        _key_1 = await remittance.generateKey(remitter.address, toBytes(receiverPassword));
-        console.log("_key_1", _key_1);
-    });
 
-    it('should deposit first time', async() => {
+        //Generate key
+        _key_1 = await remittance.generateKey(remitter.address, toBytes(receiverPassword)); 
+        
+        //Deposit first time
         const depositTxObj = await remittance
             .connect(sender)
             .deposit(_key_1, _depositLockDuration, {value: _sent});
-        
+    
         await depositTxObj.wait();
-
         assert.isDefined(depositTxObj);
     });
+    
+    it('should withdraw first deposit', async() => {
+        const withdrawTxObj = await remittance
+            .connect(remitter)
+            .withdraw(toBytes(receiverPassword), {value: 0, gasPrice: gas});
+        await withdrawTxObj.wait();
+        assert.isDefined(withdrawTxObj, "withdraw transaction did not get mined");
+    });
 
-    // it('should withdraw first deposit', async() => {
-        
-    // });
+     it('should revert when deposit is attempted with an active key', async() => {
+        await expect( 
+            remittance
+                .connect(sender)
+                .deposit(_key_1,_depositLockDuration, {value: _sent, gasPrice: gas})
 
-     // it('should revert when given an active deposit key', async() => {
-        
-    // });
+        ).to.be.revertedWith("Remittance::deposit:Invalid, Password has previously been used");
+    });
     
 });

@@ -47,8 +47,8 @@ contract Remittance is Pausable, Ownable {
         require(depositLockDuration < MAX_DURATION, "Remittance::deposit:Invalid maximum lock duration");
 
          //SLOAD        
-        require(ledger[remitKey].amount == 0, "Invalid, remit Key has an active deposit");
-        require(ledger[remitKey].depositor == address(0), "Invalid, Password has previously been used");
+        require(ledger[remitKey].amount == 0, "Remittance::deposit:Invalid, remit Key has an active deposit");
+        require(ledger[remitKey].depositor == address(0), "Remittance::deposit:Invalid, Password has previously been used");
 
         uint256 withdrawalDeadline = block.timestamp + depositLockDuration;
 
@@ -59,6 +59,31 @@ contract Remittance is Pausable, Ownable {
             deadline: withdrawalDeadline
         });
         emit LogDeposited(_msgSender(), remitKey, msg.value, withdrawalDeadline);
+    }
+
+     /*
+    @dev transfer value to caller
+    @params string password 
+     */
+    function withdraw(bytes32 receiverPassword) 
+        whenNotPaused
+        external 
+    { 
+        bytes32 _ledgerKey = generateKey(msg.sender, receiverPassword);
+
+        //SLOAD
+        Remit memory entry = ledger[_ledgerKey];
+
+        require(entry.amount != 0, "Caller is not owed a withdrawal");
+        require(block.timestamp <= entry.deadline, "withdrawal period has expired");
+
+        //SSTORE
+        ledger[_ledgerKey].amount = 0;
+        ledger[_ledgerKey].deadline = 0;
+        
+        emit LogWithdrawal(msg.sender,_ledgerKey, entry.amount, receiverPassword);
+        (bool success, ) = (msg.sender).call{value: entry.amount}("");        
+        require(success, "withdraw failed");        
     }
 
 
