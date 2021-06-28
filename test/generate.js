@@ -1,4 +1,5 @@
 const { expect, assert } = require("chai");
+const { toBytes } = require("../utils/util");
 
 let Remit, remittance, deployer, sender, remitter;
 const nullAddress = "0x0000000000000000000000000000000000000000";
@@ -37,10 +38,8 @@ describe('Key Generation', () => {
         expect(
             remittance
                 .connect(sender)
-                .generateKey(remitter, toBytes(""))
+                .generateKey(remitter.address, toBytes(""))
         )
         .to.be.revertedWith("Remittance::generateKey:Remitter password can not be empty")
     });
 });
-
-function toBytes(input)  { return ethers.utils.formatBytes32String(input);}

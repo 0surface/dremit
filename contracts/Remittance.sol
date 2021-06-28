@@ -6,13 +6,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
 contract Remittance is Pausable, Ownable {
-    uint constant public MAX_DURATION = 3153600000; //100 years
-    uint constant public MIN_DURATION = 0;
+    uint256 constant public MAX_DURATION = 4800 weeks; //3153600000; //100 years
+    uint256 constant public MIN_DURATION = 0;
     bytes32 constant NULL_BYTES32 = bytes32(0); 
 
     struct Remit {        
-        uint amount;
-        uint deadline;
+        uint256 amount;
+        uint256 deadline;
         address depositor;
     }
 
@@ -22,6 +22,11 @@ contract Remittance is Pausable, Ownable {
     event LogWithdrawal(address indexed withdrawer, bytes32 indexed key, uint withdrawn, bytes32 receiverPassword);    
     event LogRefund(address indexed refundee, bytes32 indexed key, uint refunded);
 
+    /*
+    @dev generates keccak256 hash from params
+    @param non null address
+    @param non-empty string value
+     */
     function generateKey(address remitterAddresss, bytes32 receiverPassword)
         view public
         whenNotPaused
@@ -30,6 +35,30 @@ contract Remittance is Pausable, Ownable {
         require(remitterAddresss != address(0), "Remittance::generateKey:Remitter address cannot be null");
         require(receiverPassword != NULL_BYTES32, "Remittance::generateKey:Remitter password can not be empty");
         return keccak256(abi.encodePacked(receiverPassword, remitterAddresss, this));
+    }
+
+    function deposit(bytes32 remitKey, uint256 depositLockDuration)
+        public 
+        whenNotPaused payable
+    {
+        require(msg.value > 0, "Remittance::deposit:Invalid minimum deposit amount");
+        require(remitKey != NULL_BYTES32, "Remittance::deposit:Invalid remitKey value");
+        require(depositLockDuration > MIN_DURATION, "Remittance::deposit:Invalid minumum lock duration");
+        require(depositLockDuration < MAX_DURATION, "Remittance::deposit:Invalid maximum lock duration");
+
+         //SLOAD        
+        require(ledger[remitKey].amount == 0, "Invalid, remit Key has an active deposit");
+        require(ledger[remitKey].depositor == address(0), "Invalid, Password has previously been used");
+
+        uint256 withdrawalDeadline = block.timestamp + depositLockDuration;
+
+        //SSTORE
+        ledger[remitKey] = Remit({ 
+            depositor: _msgSender(), 
+            amount: msg.value, 
+            deadline: withdrawalDeadline
+        });
+        emit LogDeposited(_msgSender(), remitKey, msg.value, withdrawalDeadline);
     }
 
 
