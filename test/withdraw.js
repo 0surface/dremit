@@ -1,13 +1,12 @@
 const {expect, assert} = require("chai");
 const { BigNumber } = require("ethers");
-const { toBytes, evm_increaseTime, evm_setNextBlockTimestamp } = require("../utils/util");
+const { toBytes, evm_increaseTime } = require("../utils/util");
 
 let Remit, remittance, deployer, sender, remitter, _remitKey_;
-const gas = 4000000;
-const _sent = 20;
 const _withdrawalDeadline = 86400;
 const receiverPassword = "abcdef";
-
+const gas = 4000000;
+const _sent = 20;
 
 beforeEach("deploy a fresh contract, generate secrets and deposit money", async () => {
   Remit  = await ethers.getContractFactory("Remittance");
@@ -69,8 +68,7 @@ describe('withdraw happy path tests', () => {
 
   it('should clear ledger after successful withdrawal', async () => {
     //Arrange 
-    const remitBefore = (await remittance.ledger(_remitKey_));
-    console.log("remitBefore", remitBefore.amount);
+    const remitBefore = (await remittance.ledger(_remitKey_));    
 
     //Act
     const withdrawTxObj = await remittance
@@ -81,8 +79,7 @@ describe('withdraw happy path tests', () => {
     assert.isDefined(withdrawTxRecepit, "withdraw Tx did not get mined/execute");
 
     //Assert
-    const remitAfter = (await remittance.ledger(_remitKey_));
-    console.log("remiAfter", remitAfter.amount );
+    const remitAfter = (await remittance.ledger(_remitKey_));    
     const zero = BigNumber.from(0);
 
     assert.notEqual(remitBefore.amount, remitAfter.amount, "ledger amount not cleared after withdrawl");

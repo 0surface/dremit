@@ -86,5 +86,25 @@ contract Remittance is Pausable, Ownable {
         require(success, "withdraw failed");        
     }
 
+    function refund(bytes32 remitKey)
+        whenNotPaused
+        external 
+    { 
+        //SLOAD
+        Remit memory entry = ledger[remitKey];
+        
+        require(entry.depositor == msg.sender, "Remittance::refund:Caller is not depositor");
+        require(entry.amount != 0, "Remittance::refund:Caller is not owed a refund");
+        require(block.timestamp > entry.deadline, "Remittance::refund:Deposit is not yet eligible for refund");
+
+        //SSTORE
+        ledger[remitKey].amount = 0;
+        ledger[remitKey].deadline = 0;
+        
+        emit LogRefund(msg.sender, remitKey, entry.amount);
+        (bool success, ) = (msg.sender).call{value: entry.amount}("");        
+        require(success, "refund failed");
+    }
+
 
 }
