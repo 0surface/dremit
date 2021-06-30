@@ -15,7 +15,7 @@ async function main() {
 
   // We get the contract to deploy
   const Remit = await hre.ethers.getContractFactory("Remittance");
-  const remittance = await Greeter.deploy();
+  const remittance = await Remit.deploy();
 
   await remittance.deployed();
 
