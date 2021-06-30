@@ -74,8 +74,8 @@ contract Remittance is Pausable, Ownable {
         //SLOAD
         Remit memory entry = ledger[_ledgerKey];
 
-        require(entry.amount != 0, "Caller is not owed a withdrawal");
-        require(block.timestamp <= entry.deadline, "withdrawal period has expired");
+        require(entry.amount != 0, "Remittance::withdraw:Caller is not owed a withdrawal");
+        require(block.timestamp <= entry.deadline, "Remittance::withdraw:withdrawal period has expired");
 
         //SSTORE
         ledger[_ledgerKey].amount = 0;
