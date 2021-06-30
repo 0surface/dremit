@@ -26,7 +26,7 @@ beforeEach("deploy a fresh contract, generate secrets and deposit money", async 
 });
 
 
-describe('withdraw happy path tests', () => {
+describe('Withdraw happy path tests', () => {
   it('should emit an event with correct arguments', async () => {
     const withdrawTxObj = await remittance.connect(remitter).withdraw(toBytes(receiverPassword), {value: 0});
     await withdrawTxObj.wait();
@@ -38,7 +38,7 @@ describe('withdraw happy path tests', () => {
         _remitKey_,
         _sent,
         toBytes(receiverPassword)
-      )
+      );
   });
   
   it('should pay owed money when receiver password is correct', async () => {
