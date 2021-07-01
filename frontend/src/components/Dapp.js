@@ -24,18 +24,15 @@ export class Dapp extends React.Component {
     return (
       <div>
         <h2>Dapp </h2>
-        <Deposit
-          depositRemit={(depositor, remitter, password, lockDuration, amount) =>
-            this._deposit(depositor, remitter, password, lockDuration, amount)
-          }
-        />
+        <Deposit depositRemit={(args) => this._deposit(args)} />
       </div>
     );
   }
 
-  async _deposit(depoitor, remitter, password, lockDuraiton, amount) {
+  async _deposit(args) {
     try {
       console.log("inside _deposit() ");
+      console.log("args:  ", args);
     } catch (err) {
       console.error("_deposit::", err);
     } finally {
