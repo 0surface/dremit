@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "chain": "hardhat node --network hardhat --no-deploy",
+    "deploy": "hardhat deploy --export-all ./frontend/src/contracts/hardhat_contracts.json"
   },
   "keywords": [],
   "author": "",
